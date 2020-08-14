@@ -46,10 +46,18 @@ public class MainActivity extends Activity {
     Shimmer shimmer;
     TextView ACCEL_LN_X, ACCEL_LN_Y, ACCEL_LN_Z, GYRO_X, GYRO_Y, GYRO_Z, GYRO_X_MESS;
     TextView AXAvg, AYAvg, AZAvg, GXAvg, GYAvg, GZAvg;
+    TextView AXMax, AYMax, AZMax, GXMax, GYMax, GZMax;
+    TextView AXMin, AYMin, AZMin, GXMin, GYMin, GZMin;
     DecimalFormat df = new DecimalFormat("#.##");
-    public double[]   AccelX, AccelY,  AccelZ, GyroX, GyroY, GyroZ = new double[]{1,1,1,1,1}; //create array
-    public double accelXData, accelYData, accelZData, gyroXData, gyroYData, gyroZData;
-    public final int ARRAYLENGTH=5;
+    public final int ARRAYLENGTH=50;
+    public double[] AccelX= new double[ARRAYLENGTH];
+    public double[] AccelY= new double[ARRAYLENGTH];
+    public double[] AccelZ= new double[ARRAYLENGTH];
+    public double[] GyroX = new double[ARRAYLENGTH];
+    public double[] GyroY = new double[ARRAYLENGTH];
+    public double[] GyroZ = new double[ARRAYLENGTH];
+    public double accelXData,accelYData,accelZData,gyroXData,gyroYData,gyroZData;
+    public int index=0;
 
 
     @Override
@@ -98,6 +106,23 @@ public class MainActivity extends Activity {
         shimmer.stopStreaming();
     }
 
+
+    public void setArrays ()
+    {
+        AccelX[index]= accelXData;
+        AccelY[index]= accelYData;
+        AccelZ[index]= accelZData;
+        GyroX[index]=  gyroXData;
+        GyroY[index]=  gyroYData;
+        GyroZ[index]=  gyroZData;
+
+        if (index<ARRAYLENGTH-1)
+            index++;
+        else
+            index=0;
+    }
+
+
     public double ArrayAvg(double[] myArray)
     {
         double avg;
@@ -110,22 +135,34 @@ public class MainActivity extends Activity {
         return avg;
     }
 
-    public void arrays ()
-    {
 
-        for (int i=0; i<20; i++) //twenty is just for testing
+    //Max and Mins :
+
+    public double ArrayMin(double[] myArray)
+    {
+        double min=myArray[0];
+
+        for(int i=0; i<ARRAYLENGTH;i++)
         {
-            if (i>=5)
-                i=0;
-            AccelX[i] = accelXData;
-            AccelY[i] = accelYData;
-            AccelZ[i] = accelZData;
-            GyroX[i] =  gyroXData;
-            GyroY[i] =  gyroYData;
-            GyroZ[i] =  gyroZData;
+            if(min>myArray[i])
+                min=myArray[i];
         }
+
+        return min;
     }
 
+    public double ArrayMax(double[] myArray)
+    {
+        double max=myArray[0];
+
+        for(int i=0; i<ARRAYLENGTH;i++)
+        {
+            if(max<myArray[i])
+                max=myArray[i];
+        }
+
+        return max;
+    }
 
 
 
@@ -156,7 +193,12 @@ public class MainActivity extends Activity {
                             Log.i(LOG_TAG, "Accel LN X: " + accelXData);
                             ACCEL_LN_X = (TextView) findViewById(R.id.accelX);
                             ACCEL_LN_X.setText("Accel X: " + Double.toString(Double.parseDouble(df.format(accelXData))));
-                            AXAvg = (TextView) findViewById(R.id.AXAverage);
+//                            AXAvg = (TextView) findViewById(R.id.AXAverage);
+//                            AXAvg.setText("AX Avg: " + Double.toString(Double.parseDouble(df.format(ArrayAvg(AccelX)))));
+//                            AXMax = (TextView) findViewById(R.id.AXMaximum);
+//                            AXMax.setText("AX Max: " + Double.toString(Double.parseDouble(df.format(ArrayMax(AccelX)))));
+//                            AXMin = (TextView) findViewById(R.id.AXMinimum);
+//                            AXMin.setText("AX Min: " + Double.toString(Double.parseDouble(df.format(ArrayMin(AccelX)))));
                         }
                         allFormats = objectCluster.getCollectionOfFormatClusters(Configuration.Shimmer3.ObjectClusterSensorName.ACCEL_LN_Y);
                         FormatCluster accelYCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(allFormats,"CAL"));
@@ -171,7 +213,7 @@ public class MainActivity extends Activity {
                         FormatCluster accelZCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(allFormats,"CAL"));
                         if (accelZCluster!=null) {
                             accelZData = accelZCluster.mData;
-                            Log.i(LOG_TAG, "Accel LN Z: " + accelZData);.
+                            Log.i(LOG_TAG, "Accel LN Z: " + accelZData);
                             ACCEL_LN_Z = (TextView) findViewById(R.id.accelZ);
                             ACCEL_LN_Z.setText("Accel Z: " + Double.toString(Double.parseDouble(df.format(accelZData))));
                             AZAvg = (TextView) findViewById(R.id.AZAverage);
@@ -185,6 +227,11 @@ public class MainActivity extends Activity {
                             GYRO_X.setText("Gyro X: " + Double.toString(Double.parseDouble(df.format(gyroXData))));
                             GYRO_X_MESS = (TextView) findViewById((R.id.gyroXMessage));
                             GXAvg = (TextView) findViewById(R.id.GXAverage);
+                            GXAvg.setText("GX Avg: " + Double.toString(Double.parseDouble(df.format(ArrayAvg(GyroX)))));
+                            GXMax = (TextView) findViewById(R.id.GXMaximum);
+                            GXMax.setText("GX Max: " + Double.toString(Double.parseDouble(df.format(ArrayMax(GyroX)))));
+                            GXMin = (TextView) findViewById(R.id.GXMinimum);
+                            GXMin.setText("GX Min: " + Double.toString(Double.parseDouble(df.format(ArrayMin(GyroX)))));
                             if(Math.abs(gyroXData) > 180) {
                                 GYRO_X_MESS.setText("Move your head slower (gyro X)");
                             } else {
@@ -209,6 +256,7 @@ public class MainActivity extends Activity {
                             GYRO_Z.setText("Gyro Z: " + Double.toString(Double.parseDouble(df.format(gyroZData))));
                             GZAvg = (TextView) findViewById(R.id.GZAverage);
                         }
+                        setArrays();
                     }
                     break;
                 case Shimmer.MESSAGE_TOAST:
