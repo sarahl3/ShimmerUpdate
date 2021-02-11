@@ -44,12 +44,18 @@ public class MainActivity extends Activity {
 
     private final static String LOG_TAG = "ShimmerBasicExample";
     Shimmer shimmer;
-    TextView ACCEL_LN_X, ACCEL_LN_Y, ACCEL_LN_Z, GYRO_X, GYRO_Y, GYRO_Z, GYRO_X_MESS;
-    TextView AXAvg, AYAvg, AZAvg, GXAvg, GYAvg, GZAvg;
+    TextView ACCEL_LN_X,ACCEL_LN_Y,ACCEL_LN_Z,GYRO_X,GYRO_Y,GYRO_Z,GYRO_X_MESS;
+    TextView AXAvg,AYAvg,AZAvg,GXAvg,GYAvg,GZAvg;
+    DecimalFormat df = new DecimalFormat("#.##");
     TextView AXMax, AYMax, AZMax, GXMax, GYMax, GZMax;
     TextView AXMin, AYMin, AZMin, GXMin, GYMin, GZMin;
-    DecimalFormat df = new DecimalFormat("#.##");
+
+    public final int SAMPLEPERSEC=100;
+    public final int MINBUFFER=100;
+    public final int MAXBUFFER=100;
+    public final int AVGBUFFER=50;
     public final int ARRAYLENGTH=50;
+
     public double[] AccelX= new double[ARRAYLENGTH];
     public double[] AccelY= new double[ARRAYLENGTH];
     public double[] AccelZ= new double[ARRAYLENGTH];
@@ -58,6 +64,9 @@ public class MainActivity extends Activity {
     public double[] GyroZ = new double[ARRAYLENGTH];
     public double accelXData,accelYData,accelZData,gyroXData,gyroYData,gyroZData;
     public int index=0;
+    public int timer=0;
+    public int letterIndex=0;
+    //   public double TotalAX,TotalAY,TotalAZ,TotalGX,TotalGY,TotalGZ;
 
 
     @Override
@@ -99,13 +108,13 @@ public class MainActivity extends Activity {
     }
 
     public void startStreaming(View v) throws InterruptedException, IOException{
+        shimmer.setSamplingRateShimmer(SAMPLEPERSEC);
         shimmer.startStreaming();
     }
 
     public void stopStreaming(View v) throws IOException{
         shimmer.stopStreaming();
     }
-
 
     public void setArrays ()
     {
@@ -122,30 +131,23 @@ public class MainActivity extends Activity {
             index=0;
     }
 
-
     public double ArrayAvg(double[] myArray)
     {
-        double avg;
-        double total=0;
-        for(int i=0; i<ARRAYLENGTH;i++)
+        double total = 0;
+        for(int i=0; i < myArray.length; ++i)
         {
-            total+=myArray[i];
+            total += myArray[i];
         }
-        avg=total/ARRAYLENGTH;
-        return avg;
+        return total / myArray.length;
     }
-
-
-    //Max and Mins :
 
     public double ArrayMin(double[] myArray)
     {
         double min=myArray[0];
-
-        for(int i=0; i<ARRAYLENGTH;i++)
+        for(int i=0; i < myArray.length; ++i)
         {
-            if(min>myArray[i])
-                min=myArray[i];
+            if(myArray[i] < min)
+                min = myArray[i];
         }
 
         return min;
@@ -154,26 +156,27 @@ public class MainActivity extends Activity {
     public double ArrayMax(double[] myArray)
     {
         double max=myArray[0];
-
-        for(int i=0; i<ARRAYLENGTH;i++)
+        for(int i=0; i < myArray.length; ++i)
         {
-            if(max<myArray[i])
-                max=myArray[i];
+            if(myArray[i] > max)
+                max = myArray[i];
         }
-
         return max;
     }
-
 
 
     /**
      * Messages from the Shimmer device including sensor data are received here
      */
     Handler mHandler = new Handler() {
-
         @Override
         public void handleMessage(Message msg) {
 
+            timer++;
+            if (timer>=500){
+                letterIndex++;
+                timer=0;
+            }
             switch (msg.what) {
                 case ShimmerBluetooth.MSG_IDENTIFIER_DATA_PACKET:
                     if ((msg.obj instanceof ObjectCluster)) {
@@ -193,12 +196,8 @@ public class MainActivity extends Activity {
                             Log.i(LOG_TAG, "Accel LN X: " + accelXData);
                             ACCEL_LN_X = (TextView) findViewById(R.id.accelX);
                             ACCEL_LN_X.setText("Accel X: " + Double.toString(Double.parseDouble(df.format(accelXData))));
-//                            AXAvg = (TextView) findViewById(R.id.AXAverage);
-//                            AXAvg.setText("AX Avg: " + Double.toString(Double.parseDouble(df.format(ArrayAvg(AccelX)))));
-//                            AXMax = (TextView) findViewById(R.id.AXMaximum);
-//                            AXMax.setText("AX Max: " + Double.toString(Double.parseDouble(df.format(ArrayMax(AccelX)))));
-//                            AXMin = (TextView) findViewById(R.id.AXMinimum);
-//                            AXMin.setText("AX Min: " + Double.toString(Double.parseDouble(df.format(ArrayMin(AccelX)))));
+                            AXAvg = (TextView) findViewById(R.id.AXAverage);
+                            AXAvg.setText("AX Avg: " + Double.toString(Double.parseDouble(df.format(ArrayAvg(AccelX)))));
                         }
                         allFormats = objectCluster.getCollectionOfFormatClusters(Configuration.Shimmer3.ObjectClusterSensorName.ACCEL_LN_Y);
                         FormatCluster accelYCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(allFormats,"CAL"));
@@ -208,6 +207,7 @@ public class MainActivity extends Activity {
                             ACCEL_LN_Y = (TextView) findViewById(R.id.accelY);
                             ACCEL_LN_Y.setText("Accel Y: " + Double.toString(Double.parseDouble(df.format(accelYData))));
                             AYAvg = (TextView) findViewById(R.id.AYAverage);
+                            AYAvg.setText("AY Avg: " + Double.toString(Double.parseDouble(df.format(ArrayAvg(AccelY)))));
                         }
                         allFormats = objectCluster.getCollectionOfFormatClusters(Configuration.Shimmer3.ObjectClusterSensorName.ACCEL_LN_Z);
                         FormatCluster accelZCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(allFormats,"CAL"));
@@ -217,6 +217,7 @@ public class MainActivity extends Activity {
                             ACCEL_LN_Z = (TextView) findViewById(R.id.accelZ);
                             ACCEL_LN_Z.setText("Accel Z: " + Double.toString(Double.parseDouble(df.format(accelZData))));
                             AZAvg = (TextView) findViewById(R.id.AZAverage);
+                            AZAvg.setText("AZ Avg: " + Double.toString(Double.parseDouble(df.format(ArrayAvg(AccelZ)))));
                         }
                         allFormats = objectCluster.getCollectionOfFormatClusters(Configuration.Shimmer3.ObjectClusterSensorName.GYRO_X);
                         FormatCluster gyroXCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(allFormats,"CAL"));
@@ -246,6 +247,7 @@ public class MainActivity extends Activity {
                             GYRO_Y = (TextView) findViewById(R.id.gyroY);
                             GYRO_Y.setText("Gyro Y: " + Double.toString(Double.parseDouble(df.format(gyroYData))));
                             GYAvg = (TextView) findViewById(R.id.GYAverage);
+                            GYAvg.setText("GY Avg: " + Double.toString(Double.parseDouble(df.format(ArrayAvg(GyroY)))));
                         }
                         allFormats = objectCluster.getCollectionOfFormatClusters(Configuration.Shimmer3.ObjectClusterSensorName.GYRO_Z);
                         FormatCluster gyroZCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(allFormats,"CAL"));
@@ -255,6 +257,7 @@ public class MainActivity extends Activity {
                             GYRO_Z = (TextView) findViewById(R.id.gyroZ);
                             GYRO_Z.setText("Gyro Z: " + Double.toString(Double.parseDouble(df.format(gyroZData))));
                             GZAvg = (TextView) findViewById(R.id.GZAverage);
+                            GZAvg.setText("GZ Avg: " + Double.toString(Double.parseDouble(df.format(ArrayAvg(GyroZ)))));
                         }
                         setArrays();
                     }
