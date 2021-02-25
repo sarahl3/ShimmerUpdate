@@ -11,7 +11,7 @@ import android.widget.Toast;
 import android.widget.TextView;
 
 
-
+import com.github.mikephil.charting.charts.Chart;
 import com.shimmerresearch.android.Shimmer;
 import com.shimmerresearch.android.guiUtilities.ShimmerBluetoothDialog;
 import com.shimmerresearch.bluetooth.ShimmerBluetooth;
@@ -26,6 +26,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.lang.Math;
@@ -36,6 +37,11 @@ import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
 import com.github.mikephil.charting.utils.ColorTemplate;
+
+import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.data.LineData;
+import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.data.Entry;
 
 
 import static com.shimmerresearch.android.guiUtilities.ShimmerBluetoothDialog.EXTRA_DEVICE_ADDRESS;
@@ -68,12 +74,31 @@ public class MainActivity extends Activity {
     public int letterIndex=0;
     //   public double TotalAX,TotalAY,TotalAZ,TotalGX,TotalGY,TotalGZ;
 
+    // Variables needed for quick test of MPAndroidChart's LineChart.
+    final int ARRAYSZ = 500;
+    List<Entry> ChartEntries = new ArrayList<Entry>();
+    LineDataSet ChartDataSet;
+    LineData ChartData;
+    LineChart MyChart;
+    int Chart_idx = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         shimmer = new Shimmer(mHandler);
+
+        // Set up a data array that we can update to plot in an MPAndroidChart LineChart.
+        // Initizlize to all 0's.
+        for(int i=0; i < ARRAYSZ; ++i)
+            ChartEntries.add(new Entry(i, 0));
+
+        ChartDataSet = new LineDataSet(ChartEntries, "MyLabel");
+        ChartData = new LineData(ChartDataSet);
+        MyChart = (LineChart) findViewById(R.id.chart);
+        MyChart.setData(ChartData);
+        MyChart.invalidate();
+
 //        BarChart barChart = (BarChart) findViewById(R.id.barchart);
 //
 //        ArrayList<BarEntry> entries = new ArrayList<>();
@@ -99,7 +124,6 @@ public class MainActivity extends Activity {
 //        barChart.setDescription("Set Bar Chart Description Here");  // set the description
 //        bardataset.setColors(ColorTemplate.COLORFUL_COLORS);
 //        barChart.animateY(5000);
-
     }
 
     public void connectDevice(View v) {
@@ -179,6 +203,13 @@ public class MainActivity extends Activity {
             }
             switch (msg.what) {
                 case ShimmerBluetooth.MSG_IDENTIFIER_DATA_PACKET:
+
+                    // Increment Chart index to point to next entry.
+                    // Wrap around to 0 if we get to the end.
+                    ++Chart_idx;
+                    if(Chart_idx >= ARRAYSZ)
+                        Chart_idx = 0;
+
                     if ((msg.obj instanceof ObjectCluster)) {
 
                         //Print data to Logcat
@@ -189,76 +220,101 @@ public class MainActivity extends Activity {
                         FormatCluster timeStampCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(allFormats,"CAL"));
                         double timeStampData = timeStampCluster.mData;
                         Log.i(LOG_TAG, "Time Stamp: " + timeStampData);
-                        allFormats = objectCluster.getCollectionOfFormatClusters(Configuration.Shimmer3.ObjectClusterSensorName.ACCEL_LN_X);
-                        FormatCluster accelXCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(allFormats,"CAL"));
-                        if (accelXCluster!=null) {
-                            accelXData = accelXCluster.mData;
-                            Log.i(LOG_TAG, "Accel LN X: " + accelXData);
-                            ACCEL_LN_X = (TextView) findViewById(R.id.accelX);
-                            ACCEL_LN_X.setText("Accel X: " + Double.toString(Double.parseDouble(df.format(accelXData))));
-                            AXAvg = (TextView) findViewById(R.id.AXAverage);
-                            AXAvg.setText("AX Avg: " + Double.toString(Double.parseDouble(df.format(ArrayAvg(AccelX)))));
-                        }
-                        allFormats = objectCluster.getCollectionOfFormatClusters(Configuration.Shimmer3.ObjectClusterSensorName.ACCEL_LN_Y);
-                        FormatCluster accelYCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(allFormats,"CAL"));
-                        if (accelYCluster!=null) {
-                            accelYData = accelYCluster.mData;
-                            Log.i(LOG_TAG, "Accel LN Y: " + accelYData);
-                            ACCEL_LN_Y = (TextView) findViewById(R.id.accelY);
-                            ACCEL_LN_Y.setText("Accel Y: " + Double.toString(Double.parseDouble(df.format(accelYData))));
-                            AYAvg = (TextView) findViewById(R.id.AYAverage);
-                            AYAvg.setText("AY Avg: " + Double.toString(Double.parseDouble(df.format(ArrayAvg(AccelY)))));
-                        }
-                        allFormats = objectCluster.getCollectionOfFormatClusters(Configuration.Shimmer3.ObjectClusterSensorName.ACCEL_LN_Z);
-                        FormatCluster accelZCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(allFormats,"CAL"));
-                        if (accelZCluster!=null) {
-                            accelZData = accelZCluster.mData;
-                            Log.i(LOG_TAG, "Accel LN Z: " + accelZData);
-                            ACCEL_LN_Z = (TextView) findViewById(R.id.accelZ);
-                            ACCEL_LN_Z.setText("Accel Z: " + Double.toString(Double.parseDouble(df.format(accelZData))));
-                            AZAvg = (TextView) findViewById(R.id.AZAverage);
-                            AZAvg.setText("AZ Avg: " + Double.toString(Double.parseDouble(df.format(ArrayAvg(AccelZ)))));
-                        }
                         allFormats = objectCluster.getCollectionOfFormatClusters(Configuration.Shimmer3.ObjectClusterSensorName.GYRO_X);
+//                        FormatCluster accelXCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(allFormats,"CAL"));
                         FormatCluster gyroXCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(allFormats,"CAL"));
+
+//                        if(accelXCluster != null) {
+//                            ChartEntries.set(Chart_idx, new Entry(Chart_idx, (float)accelXCluster.mData));
+//                        }
+
+//                        if (accelXCluster!=null) {
+//                            ChartEntries.set(Chart_idx, new Entry(Chart_idx, (float)(accelXCluster.mData/9.8)));
+//                            MyChart.invalidate();  // Update the dispaly of the Chart data.
+//
+//                            accelXData = accelXCluster.mData;
+//                            Log.i(LOG_TAG, "Accel LN X: " + accelXData);
+//                            ACCEL_LN_X = (TextView) findViewById(R.id.accelX);
+//                            ACCEL_LN_X.setText("Accel X: " + Double.toString(Double.parseDouble(df.format(accelXData))));
+//                            //AXAvg = (TextView) findViewById(R.id.AXAverage);
+//                            //AXAvg.setText("AX Avg: " + Double.toString(Double.parseDouble(df.format(ArrayAvg(AccelX)))));
+//                        }
                         if (gyroXCluster!=null) {
+                            ChartEntries.set(Chart_idx, new Entry(Chart_idx, (float)(gyroXCluster.mData/9.8)));
+                            MyChart.invalidate();  // Update the dispaly of the Chart data.
+
                             gyroXData = gyroXCluster.mData;
                             Log.i(LOG_TAG, "Gyro X: " + gyroXData);
                             GYRO_X = (TextView) findViewById(R.id.gyroX);
-                            GYRO_X.setText("Gyro X: " + Double.toString(Double.parseDouble(df.format(gyroXData))));
-                            GYRO_X_MESS = (TextView) findViewById((R.id.gyroXMessage));
-                            GXAvg = (TextView) findViewById(R.id.GXAverage);
-                            GXAvg.setText("GX Avg: " + Double.toString(Double.parseDouble(df.format(ArrayAvg(GyroX)))));
-                            GXMax = (TextView) findViewById(R.id.GXMaximum);
-                            GXMax.setText("GX Max: " + Double.toString(Double.parseDouble(df.format(ArrayMax(GyroX)))));
-                            GXMin = (TextView) findViewById(R.id.GXMinimum);
-                            GXMin.setText("GX Min: " + Double.toString(Double.parseDouble(df.format(ArrayMin(GyroX)))));
-                            if(Math.abs(gyroXData) > 180) {
-                                GYRO_X_MESS.setText("Move your head slower (gyro X)");
-                            } else {
-                                GYRO_X_MESS.setText("Keep it up, you're doing great :) (gyro X)");
-                            }
+//                          GYRO_X.setText("Gyro X: " + Double.toString(Double.parseDouble(df.format(gyroXData))));
                         }
-                        allFormats = objectCluster.getCollectionOfFormatClusters(Configuration.Shimmer3.ObjectClusterSensorName.GYRO_Y);
-                        FormatCluster gyroYCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(allFormats,"CAL"));
-                        if (gyroYCluster!=null) {
-                            gyroYData = gyroYCluster.mData;
-                            Log.i(LOG_TAG, "Gyro Y: " + gyroYData);
-                            GYRO_Y = (TextView) findViewById(R.id.gyroY);
-                            GYRO_Y.setText("Gyro Y: " + Double.toString(Double.parseDouble(df.format(gyroYData))));
-                            GYAvg = (TextView) findViewById(R.id.GYAverage);
-                            GYAvg.setText("GY Avg: " + Double.toString(Double.parseDouble(df.format(ArrayAvg(GyroY)))));
-                        }
-                        allFormats = objectCluster.getCollectionOfFormatClusters(Configuration.Shimmer3.ObjectClusterSensorName.GYRO_Z);
-                        FormatCluster gyroZCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(allFormats,"CAL"));
-                        if (gyroZCluster!=null) {
-                            gyroZData = gyroZCluster.mData;
-                            Log.i(LOG_TAG, "Gyro Z: " + gyroZData);
-                            GYRO_Z = (TextView) findViewById(R.id.gyroZ);
-                            GYRO_Z.setText("Gyro Z: " + Double.toString(Double.parseDouble(df.format(gyroZData))));
-                            GZAvg = (TextView) findViewById(R.id.GZAverage);
-                            GZAvg.setText("GZ Avg: " + Double.toString(Double.parseDouble(df.format(ArrayAvg(GyroZ)))));
-                        }
+
+
+                        /***
+                         allFormats = objectCluster.getCollectionOfFormatClusters(Configuration.Shimmer3.ObjectClusterSensorName.ACCEL_LN_Y);
+                         FormatCluster accelYCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(allFormats,"CAL"));
+                         if (accelYCluster!=null) {
+                         accelYData = accelYCluster.mData;
+                         Log.i(LOG_TAG, "Accel LN Y: " + accelYD
+                         ata);
+                         ACCEL_LN_Y = (TextView) findViewById(R.id.accelY);
+                         ACCEL_LN_Y.setText("Accel Y: " + Double.toString(Double.parseDouble(df.format(accelYData))));
+                         AYAvg = (TextView) findViewById(R.id.AYAverage);
+                         AYAvg.setText("AY Avg: " + Double.toString(Double.parseDouble(df.format(ArrayAvg(AccelY)))));
+                         }
+                         allFormats = objectCluster.getCollectionOfFormatClusters(Configuration.Shimmer3.ObjectClusterSensorName.ACCEL_LN_Z);
+                         FormatCluster accelZCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(allFormats,"CAL"));
+                         if (accelZCluster!=null) {
+                         accelZData = accelZCluster.mData;
+                         Log.i(LOG_TAG, "Accel LN Z: " + accelZData);
+                         ACCEL_LN_Z = (TextView) findViewById(R.id.accelZ);
+                         ACCEL_LN_Z.setText("Accel Z: " + Double.toString(Double.parseDouble(df.format(accelZData))));
+                         AZAvg = (TextView) findViewById(R.id.AZAverage);
+                         AZAvg.setText("AZ Avg: " + Double.toString(Double.parseDouble(df.format(ArrayAvg(AccelZ)))));
+                         }
+                         allFormats = objectCluster.getCollectionOfFormatClusters(Configuration.Shimmer3.ObjectClusterSensorName.GYRO_X);
+                         FormatCluster gyroXCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(allFormats,"CAL"));
+                         if (gyroXCluster!=null) {
+                         gyroXData = gyroXCluster.mData;
+                         Log.i(LOG_TAG, "Gyro X: " + gyroXData);
+                         GYRO_X = (TextView) findViewById(R.id.gyroX);
+                         GYRO_X.setText("Gyro X: " + Double.toString(Double.parseDouble(df.format(gyroXData))));
+                         GYRO_X_MESS = (TextView) findViewById((R.id.gyroXMessage));
+                         GXAvg = (TextView) findViewById(R.id.GXAverage);
+                         GXAvg.setText("GX Avg: " + Double.toString(Double.parseDouble(df.format(ArrayAvg(GyroX)))));
+                         GXMax = (TextView) findViewById(R.id.GXMaximum);
+                         GXMax.setText("GX Max: " + Double.toString(Double.parseDouble(df.format(ArrayMax(GyroX)))));
+                         GXMin = (TextView) findViewById(R.id.GXMinimum);
+                         GXMin.setText("GX Min: " + Double.toString(Double.parseDouble(df.format(ArrayMin(GyroX)))));
+                         if(Math.abs(gyroXData) > 180) {
+                         GYRO_X_MESS.setText("Move your head slower (gyro X)");
+                         } else {
+                         GYRO_X_MESS.setText("Keep it up, you're doing great :) (gyro X)");
+                         }
+                         }
+                         allFormats = objectCluster.getCollectionOfFormatClusters(Configuration.Shimmer3.ObjectClusterSensorName.GYRO_Y);
+                         FormatCluster gyroYCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(allFormats,"CAL"));
+                         if (gyroYCluster!=null) {
+                         gyroYData = gyroYCluster.mData;
+                         Log.i(LOG_TAG, "Gyro Y: " + gyroYData);
+                         GYRO_Y = (TextView) findViewById(R.id.gyroY);
+                         GYRO_Y.setText("Gyro Y: " + Double.toString(Double.parseDouble(df.format(gyroYData))));
+                         GYAvg = (TextView) findViewById(R.id.GYAverage);
+                         GYAvg.setText("GY Avg: " + Double.toString(Double.parseDouble(df.format(ArrayAvg(GyroY)))));
+                         }
+                         allFormats = objectCluster.getCollectionOfFormatClusters(Configuration.Shimmer3.ObjectClusterSensorName.GYRO_Z);
+                         FormatCluster gyroZCluster = ((FormatCluster)ObjectCluster.returnFormatCluster(allFormats,"CAL"));
+                         if (gyroZCluster!=null) {
+                         gyroZData = gyroZCluster.mData;
+                         Log.i(LOG_TAG, "Gyro Z: " + gyroZData);
+                         GYRO_Z = (TextView) findViewById(R.id.gyroZ);
+                         GYRO_Z.setText("Gyro Z: " + Double.toString(Double.parseDouble(df.format(gyroZData))));
+                         GZAvg = (TextView) findViewById(R.id.GZAverage);
+                         GZAvg.setText("GZ Avg: " + Double.toString(Double.parseDouble(df.format(ArrayAvg(GyroZ)))));
+                         }
+                         ***/
+
+
                         setArrays();
                     }
                     break;
