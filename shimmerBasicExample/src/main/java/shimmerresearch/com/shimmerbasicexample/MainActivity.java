@@ -12,6 +12,7 @@ import android.widget.TextView;
 
 
 import com.github.mikephil.charting.charts.Chart;
+import com.github.mikephil.charting.components.YAxis;
 import com.shimmerresearch.android.Shimmer;
 import com.shimmerresearch.android.guiUtilities.ShimmerBluetoothDialog;
 import com.shimmerresearch.bluetooth.ShimmerBluetooth;
@@ -94,9 +95,30 @@ public class MainActivity extends Activity {
             ChartEntries.add(new Entry(i, 0));
 
         ChartDataSet = new LineDataSet(ChartEntries, "MyLabel");
+        ChartDataSet.setDrawCircles(false);
+        ChartDataSet.setLineWidth(2);
+//        ChartDataSet.setColor();
         ChartData = new LineData(ChartDataSet);
         MyChart = (LineChart) findViewById(R.id.chart);
         MyChart.setData(ChartData);
+        MyChart.setRotation(-90);
+        MyChart.getAxisLeft().setAxisMinimum(-200);
+        MyChart.getAxisLeft().setAxisMaximum(200);
+        MyChart.getAxisLeft().setDrawAxisLine(false);
+        MyChart.getAxisLeft().setDrawGridLines(false);
+        MyChart.getAxisLeft().setDrawLabels(false);
+
+
+        MyChart.getXAxis().setDrawAxisLine(false);
+        MyChart.getXAxis().setDrawGridLines(false);
+        MyChart.getXAxis().setDrawLabels(false);
+
+
+        MyChart.getAxisRight().setAxisMinimum(-200);
+        MyChart.getAxisRight().setAxisMaximum(200);
+        MyChart.getAxisRight().setDrawAxisLine(false);
+        MyChart.getAxisRight().setDrawGridLines(false);
+        MyChart.getAxisRight().setDrawLabels(false);
         MyChart.invalidate();
 
 //        BarChart barChart = (BarChart) findViewById(R.id.barchart);
@@ -240,7 +262,7 @@ public class MainActivity extends Activity {
 //                            //AXAvg.setText("AX Avg: " + Double.toString(Double.parseDouble(df.format(ArrayAvg(AccelX)))));
 //                        }
                         if (gyroXCluster!=null) {
-                            ChartEntries.set(Chart_idx, new Entry(Chart_idx, (float)(gyroXCluster.mData/9.8)));
+                            ChartEntries.set(Chart_idx, new Entry(Chart_idx, (float)(gyroXCluster.mData)));
                             MyChart.invalidate();  // Update the dispaly of the Chart data.
 
                             gyroXData = gyroXCluster.mData;
