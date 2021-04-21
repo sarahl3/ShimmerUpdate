@@ -61,7 +61,7 @@ public class MainActivity extends Activity {
     public final int MINBUFFER=100;
     public final int MAXBUFFER=100;
     public final int AVGBUFFER=50;
-    public final int ARRAYLENGTH=50;
+    public final int ARRAYLENGTH=25;
 
     public double[] AccelX= new double[ARRAYLENGTH];
     public double[] AccelY= new double[ARRAYLENGTH];
@@ -262,7 +262,7 @@ public class MainActivity extends Activity {
 //                            //AXAvg.setText("AX Avg: " + Double.toString(Double.parseDouble(df.format(ArrayAvg(AccelX)))));
 //                        }
                         if (gyroXCluster!=null) {
-                            ChartEntries.set(Chart_idx, new Entry(Chart_idx, (float)(gyroXCluster.mData)));
+                            ChartEntries.set(Chart_idx, new Entry(Chart_idx, (float)(ArrayAvg(GyroX))));
                             MyChart.invalidate();  // Update the dispaly of the Chart data.
 
                             gyroXData = gyroXCluster.mData;
