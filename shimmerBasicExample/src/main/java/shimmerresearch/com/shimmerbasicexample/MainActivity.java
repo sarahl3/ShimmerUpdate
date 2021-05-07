@@ -97,7 +97,7 @@ public class MainActivity extends Activity {
         ChartDataSet = new LineDataSet(ChartEntries, "MyLabel");
         ChartDataSet.setDrawCircles(false);
         ChartDataSet.setLineWidth(2);
-//        ChartDataSet.setColor();
+        ChartDataSet.setColor(android.graphics.Color.RED);
         ChartData = new LineData(ChartDataSet);
         MyChart = (LineChart) findViewById(R.id.chart);
         MyChart.setData(ChartData);
@@ -187,6 +187,16 @@ public class MainActivity extends Activity {
         return total / myArray.length;
     }
 
+    public double ArrayAvgPos(double[] myArray)
+    {
+        double total = 0;
+        for(int i=0; i < myArray.length; ++i)
+        {
+            total += Math.abs(myArray[i]);
+        }
+        return total / myArray.length;
+    }
+
     public double ArrayMin(double[] myArray)
     {
         double min=myArray[0];
@@ -262,7 +272,14 @@ public class MainActivity extends Activity {
 //                            //AXAvg.setText("AX Avg: " + Double.toString(Double.parseDouble(df.format(ArrayAvg(AccelX)))));
 //                        }
                         if (gyroXCluster!=null) {
-                            ChartEntries.set(Chart_idx, new Entry(Chart_idx, (float)(ArrayAvg(GyroX))));
+                            float data = (float)(ArrayAvg(GyroX));
+                            float dataPos = (float)(ArrayAvgPos(GyroX));
+                            ChartEntries.set(Chart_idx, new Entry(Chart_idx, data));
+                            if(dataPos > 100) {
+                                ChartDataSet.setColor(android.graphics.Color.GREEN);
+                            } else {
+                                ChartDataSet.setColor(android.graphics.Color.RED);
+                            }
                             MyChart.invalidate();  // Update the dispaly of the Chart data.
 
                             gyroXData = gyroXCluster.mData;
