@@ -275,7 +275,7 @@ public class MainActivity extends Activity {
                             float data = (float)(ArrayAvg(GyroX));
                             float dataPos = (float)(ArrayAvgPos(GyroX));
                             ChartEntries.set(Chart_idx, new Entry(Chart_idx, data));
-                            if(dataPos > 100) {
+                            if(dataPos > 25) {
                                 ChartDataSet.setColor(android.graphics.Color.GREEN);
                             } else {
                                 ChartDataSet.setColor(android.graphics.Color.RED);
