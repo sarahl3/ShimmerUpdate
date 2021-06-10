@@ -61,7 +61,7 @@ public class MainActivity extends Activity {
     public final int MINBUFFER=100;
     public final int MAXBUFFER=100;
     public final int AVGBUFFER=50;
-    public final int ARRAYLENGTH=25;
+    public final int ARRAYLENGTH=10;
 
     public double[] AccelX= new double[ARRAYLENGTH];
     public double[] AccelY= new double[ARRAYLENGTH];
@@ -101,7 +101,7 @@ public class MainActivity extends Activity {
         ChartData = new LineData(ChartDataSet);
         MyChart = (LineChart) findViewById(R.id.chart);
         MyChart.setData(ChartData);
-        MyChart.setRotation(-90);
+        MyChart.setRotation(-360);
         MyChart.getAxisLeft().setAxisMinimum(-200);
         MyChart.getAxisLeft().setAxisMaximum(200);
         MyChart.getAxisLeft().setDrawAxisLine(false);
@@ -275,7 +275,7 @@ public class MainActivity extends Activity {
                             float data = (float)(ArrayAvg(GyroX));
                             float dataPos = (float)(ArrayAvgPos(GyroX));
                             ChartEntries.set(Chart_idx, new Entry(Chart_idx, data));
-                            if(dataPos > 25) {
+                            if(dataPos > 30) {
                                 ChartDataSet.setColor(android.graphics.Color.GREEN);
                             } else {
                                 ChartDataSet.setColor(android.graphics.Color.RED);
