@@ -61,7 +61,7 @@ public class MainActivity extends Activity {
     public final int MINBUFFER=100;
     public final int MAXBUFFER=100;
     public final int AVGBUFFER=50;
-    public final int ARRAYLENGTH=10;
+    public final int ARRAYLENGTH=9;
 
     public double[] AccelX= new double[ARRAYLENGTH];
     public double[] AccelY= new double[ARRAYLENGTH];
@@ -275,7 +275,7 @@ public class MainActivity extends Activity {
                             float data = (float)(ArrayAvg(GyroX));
                             float dataPos = (float)(ArrayAvgPos(GyroX));
                             ChartEntries.set(Chart_idx, new Entry(Chart_idx, data));
-                            if(dataPos > 30) {
+                            if(dataPos > 25) {
                                 ChartDataSet.setColor(android.graphics.Color.GREEN);
                             } else {
                                 ChartDataSet.setColor(android.graphics.Color.RED);
